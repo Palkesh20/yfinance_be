@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finance-poc"
+version = "0.1.0"
+description = "Modular financial data platform proof of concept."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Private :: Do Not Upload",
+]
+
+[project.optional-dependencies]
+backend = [
+    "fastapi>=0.162.2",
+    "uvicorn[standard]>=0.54.0",
+    "pydantic>=2.14.3",
+    "pydantic-settings>=2.16.2",
+    "httpx>=0.28.1",
+    "tenacity>=9.2.1",
+    "pandas>=3.1.1",
+    "sqlalchemy[asyncio]>=2.1.8",
+    "aiosqlite>=0.22.1",
+    "asyncpg>=0.32.0",
+    "yfinance>=1.8.0",
+    "anyio>=4.16.0",
+]
+frontend = [
+    "streamlit>=1.67.0",
+    "plotly>=7.1.0",
+    "httpx>=0.28.1",
+    "pydantic>=2.14.3",
+]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "pytest-cov>=7.1.0",
+    "respx>=0.23.1",
+    "ruff>=0.17.4",
+    "black>=26.10.1",
+    "mypy>=2.4.1",
+    "pre-commit>=4.7.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["backend/src"]
+
+[tool.setuptools.package-data]
+finance_poc = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["backend/src", "tests"]
+extend-exclude = [".venv", "data", "logs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "S", "BLE", "C4", "PTH", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["finance_poc"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "backend/src"
+files = ["backend/src/finance_poc", "tests"]
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["backend/src"]
+addopts = [
+    "--strict-markers",
+    "--cov=finance_poc",
+    "--cov-report=term-missing",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["finance_poc"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
