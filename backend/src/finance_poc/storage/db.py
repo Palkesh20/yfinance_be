@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -28,7 +29,25 @@ def create_db_engine(url: str) -> AsyncEngine:
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
-    return create_async_engine(url, pool_pre_ping=True)
+    async_url, connect_args = _async_postgres_target(url)
+    return create_async_engine(async_url, pool_pre_ping=True, connect_args=connect_args)
+
+
+def _async_postgres_target(url: str) -> tuple[str, dict[str, object]]:
+    """Use asyncpg for Postgres URLs, including Render's plain postgresql:// strings."""
+    parsed = make_url(url)
+    backend = parsed.drivername.split("+", 1)[0]
+    if backend not in {"postgres", "postgresql"}:
+        return url, {}
+    query = dict(parsed.query)
+    sslmode_values = query.pop("sslmode", ())
+    sslmode = sslmode_values[0].lower() if sslmode_values else ""
+    host = parsed.host or ""
+    connect_args: dict[str, object] = {}
+    if sslmode in {"require", "verify-ca", "verify-full"} or host.endswith(".render.com"):
+        connect_args["ssl"] = True
+    cleaned = parsed.set(drivername="postgresql+asyncpg", query=query)
+    return cleaned.render_as_string(hide_password=False), connect_args
 
 
 def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
