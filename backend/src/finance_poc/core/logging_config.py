@@ -1,4 +1,6 @@
-"""Logging setup shared by the API process and the Streamlit app.
+"""Logging setup for the API process.
+
+The Streamlit app configures its own logger and does not import this module.
 
 Dev writes a readable console line at DEBUG. Test stays at WARNING.
 Prod writes JSON to the console and to a rotating file at INFO.

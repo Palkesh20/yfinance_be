@@ -12,6 +12,18 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 GROK_API_BASE_URL = "https://api.x.ai/v1"
 GROK_MODEL = "grok-4.7"
 GROK_TIMEOUT_SECONDS = 60
+GROK_CHAT_PATH = "/chat/completions"
+
+FINNHUB_BASE_URL = "https://finnhub.io/api/v1"
+TWELVE_DATA_BASE_URL = "https://api.twelvedata.com"
+EDGAR_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
+EDGAR_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
+EDGAR_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+EDGAR_ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
+
+PRICE_INTERVALS = ("1d", "1wk", "1h")
+DEFAULT_PRICE_INTERVAL = "1d"
+DEFAULT_PRICE_LOOKBACK_DAYS = 90
 
 LOG_FILE_NAME = "finance_poc.log"
 LOG_MAX_BYTES = 5_000_000
@@ -48,7 +60,7 @@ class Capability(StrEnum):
 
 PRICE_PROVIDERS: tuple[Provider, ...] = (Provider.YFINANCE, Provider.TWELVEDATA)
 QUOTE_PROVIDERS: tuple[Provider, ...] = (Provider.FINNHUB, Provider.YFINANCE)
-NEWS_PROVIDERS: tuple[Provider, ...] = (Provider.FINNHUB,)
+NEWS_PROVIDERS: tuple[Provider, ...] = (Provider.FINNHUB, Provider.YFINANCE)
 COMPANY_PROVIDERS: tuple[Provider, ...] = (Provider.YFINANCE, Provider.FINNHUB)
 FILING_PROVIDERS: tuple[Provider, ...] = (Provider.EDGAR,)
 FINANCIAL_PROVIDERS: tuple[Provider, ...] = (Provider.EDGAR,)

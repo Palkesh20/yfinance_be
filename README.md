@@ -2,7 +2,7 @@
 
 Modular financial data platform. A FastAPI service collects prices, quotes, news, filings, and company data from several providers and exposes one normalized API. A Streamlit UI reads that API over HTTP.
 
-Phase 1 builds the data platform. Grok is the configured LLM (`grok-4.7` on the xAI API). Sentiment, retrieval over filings, and the research agent attach later beside the market-data service.
+Grok (`grok-4.7` on the xAI API) explains why a stock rose or fell. A primary researcher uses company headlines and filings, a secondary researcher uses the benchmark, sector, and financial facts, and an analyst writes the note. The home page filters that note to the last day, week, month, or year.
 
 ## Providers
 
@@ -10,7 +10,7 @@ Phase 1 builds the data platform. Grok is the configured LLM (`grok-4.7` on the 
 | --- | --- |
 | Prices | yfinance, then Twelve Data |
 | Quotes | Finnhub, then yfinance |
-| News | Finnhub |
+| News | Finnhub and yfinance, combined |
 | Company profile | yfinance, then Finnhub |
 | Filings and financial statements | SEC EDGAR submissions and company facts |
 
@@ -50,11 +50,47 @@ The `Makefile` defines the same actions. On a machine without GNU make, run the 
 | `make typecheck` | `python -m mypy` | Strict mypy |
 | `make test` | `python -m pytest` | Pytest with coverage |
 | `make check` | the three checks above | Lint, types, and tests |
-| `make run-backend` | `python -m uvicorn finance_poc.main:app --reload --host 127.0.0.1 --port 8000` | API, after the app factory lands |
-| `make run-frontend` | `python -m streamlit run frontend/app.py --server.port 8501 --server.address 127.0.0.1` | UI, after the Streamlit app lands |
+| `make run-backend` | `python -m uvicorn finance_poc.main:app --reload --host 127.0.0.1 --port 8000` | API |
+| `make run-frontend` | `python -m streamlit run frontend/app.py --server.port 8501 --server.address 127.0.0.1` | UI |
 
 Install the git hooks with `pre-commit install` after the dev extra is installed.
 
+## Run
+
+Start Postgres on `127.0.0.1:5432` with database `finance_poc`, or use Docker Compose, which starts Postgres for you. Put provider keys in `.env`.
+
+```powershell
+python -m uvicorn finance_poc.main:app --host 127.0.0.1 --port 8000
+python -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port 8501
+python scripts/smoke_test.py
+```
+
+`SMOKE_BASE_URL` points the smoke script at an already running API. Without it, the script checks `/health` in-process with SQLite.
+
+Docker Compose runs Postgres, the API, and Streamlit:
+
+```powershell
+docker compose up --build
+```
+
+The API is at `http://127.0.0.1:8000` and the UI at `http://127.0.0.1:8501`. Inside Compose, the UI calls `http://backend:8000`.
+
+## API
+
+| Method | Path | Data |
+| --- | --- | --- |
+| GET | `/health` | Database and provider configuration |
+| GET | `/api/v1/prices/{ticker}` | Price bars |
+| GET | `/api/v1/quotes/{ticker}` | Latest quote |
+| GET | `/api/v1/news` | Headlines and sentiment |
+| GET | `/api/v1/filings/{ticker}` | SEC filings |
+| GET | `/api/v1/companies/{ticker}` | Company profile |
+| GET | `/api/v1/companies/{ticker}/financials` | Annual statement facts |
+| POST | `/api/v1/research` | Grok answer using fetched headlines |
+| POST | `/api/v1/analysis` | Why the price moved over `1d`, `1w`, `1m`, or `1y` |
+
+Responses use `data`, `source`, `cached`, and `as_of`. Errors use `error.code`, `error.message`, and `error.request_id`.
+
 ## Status
 
-Step 2 of 12 is in place: settings profiles, logging, and the exception hierarchy. Connectors, storage, the API, and the UI are not implemented yet. The Grok client is not called yet.
+The data platform and the three-role move note are in place. There is no vector store. The note is an explanation of the fetched evidence, not a trade recommendation.

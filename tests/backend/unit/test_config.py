@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_provider_order_and_llm() -> None:
     assert PRICE_PROVIDERS == (Provider.YFINANCE, Provider.TWELVEDATA)
     assert QUOTE_PROVIDERS == (Provider.FINNHUB, Provider.YFINANCE)
-    assert NEWS_PROVIDERS == (Provider.FINNHUB,)
+    assert NEWS_PROVIDERS == (Provider.FINNHUB, Provider.YFINANCE)
     assert COMPANY_PROVIDERS == (Provider.YFINANCE, Provider.FINNHUB)
     assert FILING_PROVIDERS == (Provider.EDGAR,)
     assert FINANCIAL_PROVIDERS == (Provider.EDGAR,)
